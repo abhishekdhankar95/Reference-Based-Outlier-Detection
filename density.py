@@ -8,6 +8,7 @@ Created on Wed Mar 20 17:59:53 2019
 import numpy as np
 import find_reference_points as ref_point_finder
 import sys
+import matplotlib.pyplot as plt
 
 class ref_distance_point_pair:
     def __init__(self, ref_distance, ref_point):
@@ -42,39 +43,48 @@ def compute_kNN_sum(X_i_args_index, X_i_args, ref_point_distances_i, k):
     
     
     ref_distance_sum = 0
-    lower_bound = max(X_i_args_index - 1, 0)
-    upper_bound = min(X_i_args_index + 1, X_i_args.size - 1)
+    lower_bound = X_i_args_index - 1
+    upper_bound = X_i_args_index + 1
+    
+    
     
     curr = ref_point_distances_i[X_i_args[X_i_args_index]]
     
-    while lower_bound >= 0 and upper_bound < ref_point_distances_i.size and k > 0:
+    while lower_bound >= 0 and upper_bound < ref_point_distances_i.shape[0] and k > 0:
         
         lower = ref_point_distances_i[X_i_args[lower_bound]]
         upper = ref_point_distances_i[X_i_args[upper_bound]]
         if(abs(curr - lower) < abs(curr - upper)):
             ref_distance_sum += abs(curr - lower)
             k -= 1
-            lower -= 1
+            lower_bound -= 1
         else:
             ref_distance_sum += abs(curr - upper)
             k -= 1
-            upper += 1
+            upper_bound += 1
+            
     
-    while lower_bound > 0 and k > 0:
+    
+    while lower_bound >= 0 and k > 0:
         
         lower = ref_point_distances_i[X_i_args[lower_bound]]
         ref_distance_sum += abs(curr - lower)
         k -= 1
-        lower -= 1
+        lower_bound -= 1
     
-    while upper_bound < ref_point_distances_i.size and k > 0:
+    while upper_bound < ref_point_distances_i.shape[0] and k > 0:
         
         upper = ref_point_distances_i[X_i_args[upper_bound]]
+        print(abs(curr - upper))
         ref_distance_sum += abs(curr - upper)
         k -= 1
-        upper += 1
+        upper_bound += 1
+        
+    
         
     #print("ref "+str(ref_distance_sum))
+    
+    print(ref_distance_sum, upper_bound)
     
     return ref_distance_sum
     
@@ -92,7 +102,7 @@ def minimum_density_computation(ref_points, X, ref_points_distances, k):
     for i in range(X_1_args.shape[0]):
         data_point_index = X_1_args[i]
         #print(i, compute_kNN_sum(data_point_index, X_1_args, ref_points_distances[0], k))
-        temp = (compute_kNN_sum(data_point_index, X_1_args, ref_points_distances[0], k)+1)/k
+        temp = (compute_kNN_sum(i, X_1_args, ref_points_distances[0], k))/k
         
         ##print(1/temp)
         
@@ -106,25 +116,30 @@ def minimum_density_computation(ref_points, X, ref_points_distances, k):
         X_j_args = np.argsort(ref_points_distances[j])
         X_j = X[X_j_args]
         
-        for i in range(X_j_args.size):
+        for i in range(X_j_args.shape[0]):
             data_point_index = X_j_args[i]
-            temp = (compute_kNN_sum(data_point_index, X_1_args, ref_points_distances[0], k)+1)/k            
+            temp = (compute_kNN_sum(i, X_1_args, ref_points_distances[0], k))/k            
             temp_min_density = 1/temp
             min_density[data_point_index] = min(min_density[data_point_index], temp_min_density)
     return min_density
         
 
+
+def takeSecond(elem):
+    return elem[1]
+
+
 if __name__ == "__main__":
     
     
-    print(absolute_distance(np.array([5.0, 6.0, 7.0, 8.0]), np.array([1.0, 2.0, 3.0, 4.0]), "cosine"))
+    #print(absolute_distance(np.array([5.0, 6.0, 7.0, 8.0]), np.array([1.0, 2.0, 3.0, 4.0]), "cosine"))
     
     k = int(sys.argv[1])
     file_name = sys.argv[2]
     
     ref_points, X = ref_point_finder.reference_points_kMeans(file_name)
     
-    print(ref_points.shape, X.shape)
+    #print(ref_points.shape, X.shape)
     
     ref_points_distances = ref_point_absolute_distance(ref_points, X)
     
@@ -135,12 +150,31 @@ if __name__ == "__main__":
     
     #for density in min_density:
     #       print(density)
+    ##########################################################################
+    ros_arg = np.argsort(ros_of_X)
     
+    X_ros_sorted = X[ros_arg]
+    #X_ros_sorted_dec= np.flip(X_ros_sorted,axis=0)
+    #index = range(X.shape[0])
+    #combined= np.vstack((index, ros_of_X)).T
+    #sorted_ros_of_X = sorted(combined,reverse=True, key=takeSecond)
     
+    number_of_top_outliers=3
     
+    class_label=[]
     
+    for i in range(X_ros_sorted.shape[0]):
+        class_label.append(1)
+        
+        '''
+    for i in range(number_of_top_outliers):
+        class_label[int (sorted_ros_of_X[i][0])]=2
+    '''
     
+    for i in range(number_of_top_outliers):
+        class_label[X.shape[0]-i-1]=2
     
+    plt.scatter(X_ros_sorted[:,0], X_ros_sorted[:,1], c=class_label)
     
     
     
