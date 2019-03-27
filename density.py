@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 20 17:59:53 2019
-
-@author: abhis
-"""
-
 import numpy as np
 import find_reference_points as ref_point_finder
 import sys
@@ -157,7 +150,7 @@ if __name__ == "__main__":
     X_ros_sorted = X[ros_arg]
     X_ros_sorted_dec= np.flip(X_ros_sorted,axis=0)
     
-    number_of_top_outliers = 1000
+    number_of_top_outliers = 700
     
     class_label=[]
     
